@@ -1,0 +1,135 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+</style>
+</head>
+<body>
+
+<% if(typeof errors !== "undefined" && typeof errors.task !== "undefined") { %> 
+    <p>Błąd: <%= errors.task.message %></p>
+<% } %>
+
+<% if(typeof errors !== "undefined" && typeof errors.timeToDone !== "undefined") { %> 
+    <p>Błąd: <%= errors.timeToDone.message %></p>
+<% } %>
+
+<form action="/addTask" method="post">
+    <label for="fname">Zadanie:</label><br>
+    <input type="text" id="task" name="task" value=""><br>
+    <label for="lname">Czas na wykonanie:</label><br>
+    <input type="datetime-local" id="timeToDone" name="timeToDone" value=""><br><br>
+    <input type="submit" value="Dodaj">
+</form>
+<br><br>
+
+
+<p style="font-size:10px;font-family:Arial">Automatyczne odświeanie strony co 5 minut.</p>
+
+
+<table>
+    
+    <tr>
+      <th>Zadanie</th>
+      <th>Czas na wykonanie</th>
+      <th>Czas utworzenia/edytowania</th>
+      <th>Status</th>
+      <th>Akcje</th>
+    </tr>
+
+  <% if(tasks.length === 0 ) { %>
+    <h5>Aktualnie nie ma tasków do wyświetlenia</h5>
+  <% } %>
+    
+    <% tasks.forEach((task) => { %>
+    <% const opts = { hour: "numeric", minute: "numeric", weekday: "long", month: "numeric", year: "numeric", day: "numeric"}; %>    
+
+    <tr>
+      <td><%= task.task %></td>
+      
+      <% if(task.done === true) { %>
+        <td>Zrobione</td>
+      <% } else if(task.timeToDone === null) { %>
+        <td>Bezterminowe</td>
+      <% } else { %>
+        <td><%= howTime(task.timeToDone) %></td>
+      <% } %>
+
+      <% if(String(task.created_at) === String(task.updatedAt)) { %>
+        <td>Utworzono: <%= Intl.DateTimeFormat("local", opts).format(task.created_at) %>%></td>
+      <% } else { %>
+        <td>Edytowano: <%= Intl.DateTimeFormat("local", opts).format(task.updatedAt) %>%></td>
+      <% } %>
+
+      <% if(task.done === false) { %>
+        <td>Nie wykonane</td>
+      <% } else { %>
+        <td>Zrobione</td>
+      <% } %>
+
+        <td>
+      
+        <form>
+            <input type="button" onclick="window.location.href='/deleteTask/<%= task._id %>';" value="Usuń" />
+        </form>
+
+        <form action="/taskDoneSwitch/<%= task._id %>" method="post">
+            <% if(task.done === false) { %>
+              <input type="submit" value="Zakończ">
+            <% } else { %>
+              <input type="submit" value="Anuluj ukończenie">
+            <% } %>
+        </form>
+
+        <form action="/tasks/edit/<%= task._id %>" method="get">
+            <input type="submit" value="Edytuj">
+        </form>
+
+        </td>
+
+    </tr>
+    <% }) %>
+</table>
+
+
+
+</body>
+
+<script>
+
+    window.setInterval('refresh()', 300000); 	
+    // every 5min auto reload
+
+    // Refresh or reload page.
+    function refresh() {
+        window .location.reload();
+    }
+
+
+
+</script>
+
+
+<p style="font-size:10px;font-family:Arial">Task to do list by devjan.com</p>
+
+</html>
+
+

@@ -1,0 +1,116 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+</style>
+</head>
+<body>
+<% let date1 = taskEdit.timeToDone %>
+<% let dateConverted;%>
+<% function dateToISOLikeButLocal(date) { %>
+<%   const offsetMs = date.getTimezoneOffset() * 60 * 1000;%>
+<%   const msLocal =  date.getTime() - offsetMs;%>
+<%   const dateLocal = new Date(msLocal);%>
+<%   const iso = dateLocal.toISOString();%>
+<%   const isoLocal = iso.slice(0, 19);%>
+<%   dateConverted = isoLocal;%>
+<%}%>
+
+<% if (date1) { %>
+    <% dateToISOLikeButLocal(date1); %>
+<% } %>
+
+
+
+<% if(typeof errors !== "undefined") { %> 
+    <p>Błąd: <%= errors.task.message %></p>
+<% } %>
+
+
+<form method="post">
+    <label for="fname">Zadanie:</label><br>
+    <input type="text" id="task" name="task" value="<%= taskEdit.task %>"><br>
+    <label for="lname">Czas na wykonanie:</label><br>
+    <input type="datetime-local" id="timeToDone" name="timeToDone" value="<%= dateConverted %>"><br><br>
+    <input type="submit" value="Edytuj">
+</form>
+<br><br>
+
+<table>
+    
+    <tr>
+      <th>Zadanie</th>
+      <th>Czas na wykonanie</th>
+      <th>Czas utworzenia/edytowania</th>
+      <th>Status</th>
+      <th>Akcje</th>
+    </tr>
+    <% tasks.forEach((task) => { %>
+    <% const opts = { hour: "numeric", minute: "numeric", weekday: "long", month: "numeric", year: "numeric", day: "numeric"}; %>    
+
+    <tr>
+      <td><%= task.task %></td>
+      
+      <% if(task.done === true) { %>
+        <td>Zrobione</td>
+      <% } else if(task.timeToDone === null) { %>  
+        <td>Bezterminowe</td>
+      <% } else { %>
+        <td><%= howTime(task.timeToDone) %></td>
+      <% } %>
+
+      <% if(String(task.created_at) === String(task.updatedAt)) { %>
+        <td>Utworzono: <%= Intl.DateTimeFormat("local", opts).format(task.created_at) %>%></td>
+      <% } else { %>
+        <td>Edytowano: <%= Intl.DateTimeFormat("local", opts).format(task.updatedAt) %>%></td>
+      <% } %>
+
+      <% if(task.done === false) { %>
+        <td>Nie wykonane</td>
+      <% } else { %>
+        <td>Zrobione</td>
+      <% } %>
+
+        <td>
+      
+        <form>
+            <input type="button" onclick="window.location.href='/deleteTask/<%= task._id %>';" value="Usuń" />
+        </form>
+
+        <form action="/taskDoneSwitch/<%= task._id %>" method="post">
+            <% if(task.done === false) { %>
+              <input type="submit" value="Zakończ">
+            <% } else { %>
+              <input type="submit" value="Anuluj ukończenie">
+            <% } %>
+        </form>
+
+        <form action="/tasks/edit/<%= task._id %>" method="get">
+            <input type="submit" value="Edytuj">
+        </form>
+
+        </td>
+
+    </tr>
+    <% }) %>
+</table>
+
+</body>
+</html>
